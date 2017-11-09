@@ -1,7 +1,8 @@
 # Smooch Bot-to-agent Handoff Example
 
-<iframe src="https://player.vimeo.com/video/242124581" width="640" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-<p><a href="https://vimeo.com/242124581">smooch-pipelines-with-smoochdesk</a> from <a href="https://vimeo.com/user72865062">Anastasi Theodore Bakolias</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+![screen shot 2017-11-09 at 3 20 30 pm](https://user-images.githubusercontent.com/2235885/32627755-902818ba-c561-11e7-8431-e757d98add45.png)
+
+[Watch a demo](https://vimeo.com/user72865062)
 
 ## Purpose
 
