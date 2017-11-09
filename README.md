@@ -1,8 +1,9 @@
 # Smooch Bot-to-agent Handoff Example
 
-![screen shot 2017-11-09 at 3 20 30 pm](https://user-images.githubusercontent.com/2235885/32627755-902818ba-c561-11e7-8431-e757d98add45.png)
+![screen shot](https://user-images.githubusercontent.com/2235885/32630511-d374d24e-c56a-11e7-9797-6d94141d0c4e.png)
+)
 
-[Watch a demo](https://vimeo.com/user72865062)
+[Watch a demo](https://vimeo.com/242135727)
 
 ## Purpose
 
