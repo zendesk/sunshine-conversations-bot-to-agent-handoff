@@ -31,7 +31,7 @@ async function skipProcessor(req, res) {
 		const userProps = await pipeline.getUserProps(req.body.appUser._id);
 		console.log({ userProps });
 
-		if (userProps.sendToAgent) {
+		if (userProps.AGENT_SESSION) {
 			await pipeline.continueMessage(Object.assign((req.body.message.metadata || {}), { ignore: true }), req.body.nonce);
 			res.end();
 			return;
@@ -77,7 +77,7 @@ async function sentimentProcessor(req, res) {
 async function dialogProcessor(req, res) {
 	if (req.body.message.text.indexOf('help') !== -1) {
 		try {
-			await pipeline.setUserProps(req.body.appUser._id, { sendToAgent: true });
+			await pipeline.setUserProps(req.body.appUser._id, { AGENT_SESSION: true });
 			await pipeline.continueMessage(req.body.message.metadata, req.body.nonce);
 			await pipeline.sendMessage(req.body.appUser._id, 'Just a moment. Let me get a human');
 		} catch (error) {
