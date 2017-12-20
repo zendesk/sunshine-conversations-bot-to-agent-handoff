@@ -2,7 +2,7 @@
 
 ![screen shot](https://user-images.githubusercontent.com/2235885/32630511-d374d24e-c56a-11e7-9797-6d94141d0c4e.png)
 
-[Watch a demo](https://vimeo.com/242135727)
+[Watch a demo](https://vimeo.com/248221463)
 
 ## Purpose
 
