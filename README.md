@@ -28,3 +28,5 @@ An API user can define one or many processors to execute in a specified sequence
 
 
 You can inspect the configuration by running `npm run show`.
+
+Can be run alongside [Smoochdesk](https://github.com/smooch/smooch-desk) to reproduce the handoff and toggling of bot state shown in the demo video.
