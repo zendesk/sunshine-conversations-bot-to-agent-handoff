@@ -30,8 +30,4 @@ async function deployPipeline() {
 	console.log('deployment complete');
 }
 
-try {
-	deployPipeline();
-} catch (error) {
-	console.log('ERROR', error);
-}
+deployPipeline().catch(console.error).then(() => process.exit(0));
