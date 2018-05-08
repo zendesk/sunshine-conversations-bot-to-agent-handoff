@@ -1,2 +1,5 @@
 /node_modules
 .env
+pipeline_config.json
+.vimlocal
+.DS_Store
