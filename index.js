@@ -4,11 +4,13 @@ require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
 const pipeline = require('./pipeline_endpoint');
 
 const PORT = process.env.PORT || 8000;
 
 express()
+	.use(morgan('tiny'))
 	.use(express.static('public'))
 	.use(bodyParser.json())
 	.post('/processors/skip', validateSecret, determineIfHandle, skipProcessor)

@@ -9,8 +9,7 @@ const SMOOCH_ROOT = process.env.SMOOCH_ROOT;
 const ACCOUNT_KEY_ID = process.env.SMOOCH_ACCOUNT_KEY_ID;
 const ACCOUNT_SECRET = process.env.SMOOCH_ACCOUNT_SECRET;
 const APP_ID = process.env.SMOOCH_APP_ID;
-const BASE_URL = `${SMOOCH_ROOT}/v1/apps/${APP_ID}/middleware`;
-const TOKEN = jwt.sign({
+const ACCOUNT_JWT = jwt.sign({
 	scope: 'account'
 }, ACCOUNT_SECRET, {
 	header: {
@@ -18,12 +17,13 @@ const TOKEN = jwt.sign({
 	}
 });
 
-async function request(method, endpoint, data) {
-	const url = BASE_URL + endpoint;
+async function request(method, endpoint, data, token) {
+	const url = `${SMOOCH_ROOT}/v1/apps/${APP_ID}/${endpoint}`;
+	token = token || ACCOUNT_JWT;
 	const options = {
 		method,
 		headers: {
-			'Authorization': 'Bearer ' + TOKEN,
+			'Authorization': `Bearer ${token}`,
 			'Accept': 'application/json',
 			'Content-Type': 'application/json'
 		}
@@ -54,65 +54,33 @@ async function request(method, endpoint, data) {
 }
 
 // continueMessage :: (metadata, temporaryToken) -> Promise()
-async function continueMessage(metadata, temporaryToken) {
-	const url = 'https://app.smooch.io/v1/middleware/continue';
-	await fetch(url, {
-		method: 'post',
-		body: JSON.stringify({
-			metadata
-		}),
-		headers: {
-			'Authorization': 'Bearer ' + temporaryToken,
-			'Accept': 'application/json',
-			'Content-Type': 'application/json'
-		}
-	});
+function continueMessage(metadata, temporaryToken) {
+	return request('post', '/middleware/continue', {
+		metadata
+	}, temporaryToken);
 }
 
 // getUserProps :: (userId) -> Promise({ properties })
 async function getUserProps(userId) {
-	const url = `https://app.smooch.io/v1/apps/${APP_ID}/appusers/${userId}`;
-	const response = await fetch(url, {
-		headers: {
-			'Authorization': 'Bearer ' + TOKEN
-		}
-	});
+	const response = await request('get', `/appusers/${userId}`);
 	const data = await response.json();
 	return data.appUser.properties;
 }
 
 // setUserProps :: (userId, properties) -> Promise()
-async function setUserProps(userId, properties) {
-	const url = `https://app.smooch.io/v1/apps/${APP_ID}/appusers/${userId}`;
-	await fetch(url, {
-		method: 'put',
-		body: JSON.stringify({
-			properties
-		}),
-		headers: {
-			'Authorization': 'Bearer ' + TOKEN,
-			'Accept': 'application/json',
-			'Content-Type': 'application/json'
-		}
+function setUserProps(userId, properties) {
+	return request('post', `/appusers/${userId}`, {
+		properties
 	});
 }
 
 // sendMessage :: (userId, text) -> Promise()
-async function sendMessage(userId, text) {
-	const url = `https://app.smooch.io/v1/apps/${APP_ID}/appusers/${userId}/messages`;
-	await fetch(url, {
-		method: 'post',
-		body: JSON.stringify({
-			text,
-			type: 'text',
-			role: 'appMaker',
-			name: 'bot'
-		}),
-		headers: {
-			'Authorization': 'Bearer ' + TOKEN,
-			'Accept': 'application/json',
-			'Content-Type': 'application/json'
-		}
+function sendMessage(userId, text) {
+	return request('post', `appusers/${userId}/messages`, {
+		text,
+		type: 'text',
+		role: 'appMaker',
+		name: 'bot'
 	});
 }
 
@@ -124,12 +92,12 @@ async function listProcessors() {
 
 // deleteProcessor :: (processorId) -> Promise()
 async function deleteProcessor(processorId) {
-	await request('delete', `/processors/${processorId}`);
+	await request('delete', `/middleware/processors/${processorId}`);
 }
 
 // createProcessor :: (target) -> Promise(processorSecret)
 async function createProcessor(target) {
-	const data = await request('post', '/processors', {
+	const data = await request('post', '/middleware/processors', {
 		target
 	});
 	return {
@@ -140,7 +108,7 @@ async function createProcessor(target) {
 
 // getPipeline :: () -> Promise([ processors ])
 async function getPipeline() {
-	const data = await request('get', '/pipelines');
+	const data = await request('get', '/middleware/pipelines');
 	return data.pipelines['appuser-message'];
 }
 
