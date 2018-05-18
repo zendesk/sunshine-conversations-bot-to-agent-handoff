@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
+    "start": "nodemon index",
     "deploy": "node scripts/deploy_pipeline",
     "show": "node scripts/show_pipeline"
   },
@@ -17,5 +17,8 @@
     "jsonwebtoken": "8.1.0",
     "morgan": "1.9.0",
     "node-fetch": "2.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.4"
   }
 }
