@@ -5,7 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const pipeline = require('./pipeline_endpoint');
+const smooch = require('./smooch_endpoint');
 
 const PORT = process.env.PORT || 8000;
 
@@ -27,7 +27,7 @@ function processor(name, handlers) {
 		}
 
 		if (!stop) {
-			await pipeline.continueMessage(metadata, req.body.nonce);
+			await smooch.continueMessage(metadata, req.body.nonce);
 		}
 
 		res.end();
@@ -40,7 +40,7 @@ const skipProcessor = processor('skip', {
 			return;
 		}
 
-		const userProps = await pipeline.getUserProps(body.appUser._id);
+		const userProps = await smooch.getUserProps(body.appUser._id);
 		console.log({
 			userProps
 		});
@@ -60,7 +60,7 @@ const echoBotProcessor = processor('echo', {
 			return;
 		}
 
-		await pipeline.sendMessage(body.appUser._id, `you said "${body.message.text}"`);
+		await smooch.sendMessage(body.appUser._id, `you said "${body.message.text}"`);
 	}
 });
 
@@ -79,10 +79,10 @@ const dialogProcessor = processor('dialog', {
 		}
 
 		if (body.message.text.indexOf('help') !== -1) {
-			await pipeline.setUserProps(body.appUser._id, {
+			await smooch.setUserProps(body.appUser._id, {
 				AGENT_SESSION: true
 			});
-			await pipeline.sendMessage(body.appUser._id, 'Just a moment. Let me get a human');
+			await smooch.sendMessage(body.appUser._id, 'Just a moment. Let me get a human');
 		}
 	}
 });
