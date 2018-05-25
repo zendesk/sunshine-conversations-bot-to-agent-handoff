@@ -9,100 +9,91 @@ const pipeline = require('./pipeline_endpoint');
 
 const PORT = process.env.PORT || 8000;
 
-express()
-	.use(morgan('tiny'))
-	.use(express.static('public'))
-	.use(bodyParser.json())
-	.post('/processors/skip', validateSecret, determineIfHandle, skipProcessor)
-	.post('/processors/echo', validateSecret, determineIfHandle, echoBotProcessor)
-	.post('/processors/sentiment', validateSecret, sentimentProcessor)
-	.post('/processors/dialog', validateSecret, determineIfHandle, dialogProcessor)
-	.post('/agent', agentHandler)
-	.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
+function processor(name, handlers) {
+	return async function(req, res) {
+		const metadata = {};
+		let stop;
+
+		try {
+			const handler = handlers[req.body.trigger];
+			if (handler) {
+				stop = await handler(req.body, (newMetadata) => {
+					Object.assign(metadata, newMetadata);
+				});
+			}
+		} catch (error) {
+			console.log(`${name} processor ERROR`, error.message);
+		}
+
+		if (!stop) {
+			await pipeline.continueMessage(metadata, req.body.nonce);
+		}
+
+		res.end();
+	};
+}
+
+const skipProcessor = processor('skip', {
+	'message:appUser': async function(body, setMetadata) {
+		if (body.message.metadata && body.message.metadata.ignore) {
+			return;
+		}
+
+		const userProps = await pipeline.getUserProps(body.appUser._id);
+		console.log({
+			userProps
+		});
+
+		if (userProps.AGENT_SESSION) {
+			setMetadata({
+				ignore: true
+			});
+			return true;
+		}
+	}
+});
+
+const echoBotProcessor = processor('echo', {
+	'message:appUser': async function(body) {
+		if (body.message.metadata && body.message.metadata.ignore) {
+			return;
+		}
+
+		await pipeline.sendMessage(body.appUser._id, `you said "${body.message.text}"`);
+	}
+});
+
+const sentimentProcessor = processor('sentiment', {
+	'message:appUser': async function(body, setMetadata) {
+		setMetadata({
+			sentimentScore: .5
+		});
+	}
+});
+
+const dialogProcessor = processor('dialog', {
+	'message:appUser': async function(body) {
+		if (body.message.metadata && body.message.metadata.ignore) {
+			return;
+		}
+
+		if (body.message.text.indexOf('help') !== -1) {
+			await pipeline.setUserProps(body.appUser._id, {
+				AGENT_SESSION: true
+			});
+			await pipeline.sendMessage(body.appUser._id, 'Just a moment. Let me get a human');
+		}
+	}
+});
 
 function agentHandler(req, res) {
 	// this endpoint simulates final delivery to agent interface
-	console.log('Delivered', req.body.messages.map((message) => ({metadata: message.metadata, text: message.text })));
+	console.log('Delivered', req.body.messages.map((message) => ({
+		metadata: message.metadata,
+		text: message.text
+	})));
 	res.end();
-}
-
-
-async function skipProcessor(req, res) {
-	try {
-		const userProps = await pipeline.getUserProps(req.body.appUser._id);
-		console.log({ userProps });
-
-		if (userProps.AGENT_SESSION) {
-			await pipeline.continueMessage(Object.assign((req.body.message.metadata || {}), { ignore: true }), req.body.nonce);
-			res.end();
-			return;
-		}
-
-	} catch (error) {
-		console.log('skipProcessor ERROR', error.message);
-	}
-
-	await pipeline.continueMessage(req.body.message.metadata, req.body.nonce);
-	res.end();
-}
-
-
-async function echoBotProcessor(req, res) {
-	try {
-		await pipeline.sendMessage(req.body.appUser._id, `you said "${req.body.message.text}"`);
-	} catch (error) {
-		console.log('echoBotProcessor ERROR', error);
-	}
-
-	await pipeline.continueMessage(req.body.message.metadata, req.body.nonce);
-	res.end();
-}
-
-
-async function sentimentProcessor(req, res) {
-	try {
-		await pipeline.continueMessage(Object.assign((req.body.message.metadata || {}), {
-			sentimentScore: .5
-		}), req.body.nonce);
-		res.end();
-		return;
-	} catch (error) {
-		console.log('sentimentProcessor ERROR', error);
-	}
-
-	await pipeline.continueMessage(req.body.message.metadata, req.body.nonce);
-	res.end();
-}
-
-
-async function dialogProcessor(req, res) {
-	if (req.body.message.text.indexOf('help') !== -1) {
-		try {
-			await pipeline.setUserProps(req.body.appUser._id, { AGENT_SESSION: true });
-			await pipeline.continueMessage(req.body.message.metadata, req.body.nonce);
-			await pipeline.sendMessage(req.body.appUser._id, 'Just a moment. Let me get a human');
-		} catch (error) {
-			console.log('dialogProcessor ERROR', error);
-		}
-	}
-
-	res.end();
-}
-
-
-async function determineIfHandle(req, res, next) {
-	if (req.body.message.metadata && req.body.message.metadata.ignore) {
-		try {
-			await pipeline.continueMessage(req.body.message.metadata, req.body.nonce);
-			res.end();
-			return;
-		} catch (error) {
-			console.log('determineIfHandle ERROR', error);
-		}
-	}
-
-	next();
 }
 
 
@@ -111,3 +102,13 @@ function validateSecret(req, res, next) {
 	next();
 }
 
+express()
+	.use(morgan('tiny'))
+	.use(express.static('public'))
+	.use(bodyParser.json())
+	.post('/processors/skip', validateSecret, skipProcessor)
+	.post('/processors/echo', validateSecret, echoBotProcessor)
+	.post('/processors/sentiment', validateSecret, sentimentProcessor)
+	.post('/processors/dialog', validateSecret, dialogProcessor)
+	.post('/agent', agentHandler)
+	.listen(PORT, () => console.log(`Listening on port ${PORT}`));

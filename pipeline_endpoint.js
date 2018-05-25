@@ -5,7 +5,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const fetch = require('node-fetch');
 
-const SMOOCH_ROOT = process.env.SMOOCH_ROOT;
+const SMOOCH_ROOT = process.env.SMOOCH_ROOT || 'https://api.smooch.io';
 const ACCOUNT_KEY_ID = process.env.SMOOCH_ACCOUNT_KEY_ID;
 const ACCOUNT_SECRET = process.env.SMOOCH_ACCOUNT_SECRET;
 const APP_ID = process.env.SMOOCH_APP_ID;
@@ -55,21 +55,20 @@ async function request(method, endpoint, data, token) {
 
 // continueMessage :: (metadata, temporaryToken) -> Promise()
 function continueMessage(metadata, temporaryToken) {
-	return request('post', '/middleware/continue', {
+	return request('post', 'middleware/continue', {
 		metadata
 	}, temporaryToken);
 }
 
 // getUserProps :: (userId) -> Promise({ properties })
 async function getUserProps(userId) {
-	const response = await request('get', `/appusers/${userId}`);
-	const data = await response.json();
+	const data = await request('get', `appusers/${userId}`);
 	return data.appUser.properties;
 }
 
 // setUserProps :: (userId, properties) -> Promise()
 function setUserProps(userId, properties) {
-	return request('post', `/appusers/${userId}`, {
+	return request('put', `appusers/${userId}`, {
 		properties
 	});
 }
@@ -86,19 +85,20 @@ function sendMessage(userId, text) {
 
 // listProcessors :: () -> Promise([ processorIds ])
 async function listProcessors() {
-	const data = await request('get', '/processors');
+	const data = await request('get', 'middleware/processors');
 	return data.processors;
 }
 
 // deleteProcessor :: (processorId) -> Promise()
 async function deleteProcessor(processorId) {
-	await request('delete', `/middleware/processors/${processorId}`);
+	await request('delete', `middleware/processors/${processorId}`);
 }
 
 // createProcessor :: (target) -> Promise(processorSecret)
 async function createProcessor(target) {
-	const data = await request('post', '/middleware/processors', {
-		target
+	const data = await request('post', 'middleware/processors', {
+		target,
+		triggers: ['message:appUser', 'postback']
 	});
 	return {
 		id: data.processor._id,
@@ -108,13 +108,13 @@ async function createProcessor(target) {
 
 // getPipeline :: () -> Promise([ processors ])
 async function getPipeline() {
-	const data = await request('get', '/middleware/pipelines');
-	return data.pipelines['appuser-message'];
+	const data = await request('get', 'middleware/pipelines');
+	return data.pipelines['appUser'];
 }
 
 // setPipeline :: (processors) -> Promise()
 async function setPipeline(processors) {
-	await request('put', '/pipelines/appuser-message', processors);
+	await request('put', 'middleware/pipelines/appuser', processors);
 }
 
 module.exports = {
