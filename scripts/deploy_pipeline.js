@@ -14,7 +14,7 @@ async function removeOldProcessors() {
 async function addNewProcessors() {
 	const ids = [];
 	for (const endpoint of config.orderedEndpoints) {
-		const data = await smooch.createProcessor(endpoint);
+		const data = await smooch.createProcessor(endpoint.target, endpoint.triggers);
 		console.log('add new processors', data);
 		ids.push(data.id);
 	}

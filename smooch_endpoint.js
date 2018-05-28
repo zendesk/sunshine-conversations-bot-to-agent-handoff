@@ -94,11 +94,11 @@ async function deleteProcessor(processorId) {
 	await request('delete', `middleware/processors/${processorId}`);
 }
 
-// createProcessor :: (target) -> Promise(processorSecret)
-async function createProcessor(target) {
+// createProcessor :: (target, triggers) -> Promise(processorSecret)
+async function createProcessor(target, triggers) {
 	const data = await request('post', 'middleware/processors', {
 		target,
-		triggers: ['message:appUser', 'postback']
+		triggers
 	});
 	return {
 		id: data.processor._id,
