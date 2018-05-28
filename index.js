@@ -34,6 +34,16 @@ function processor(name, handlers) {
 	};
 }
 
+const postbackProcessor = processor('postback', {
+	'postback': async function(body) {
+		const action = body.postback.action;
+		const payload = action.payload || action.text;
+		if (payload) {
+			await smooch.sendMessage(body.appUser._id, `you chose "${payload}"`);
+		}
+	}
+});
+
 const skipProcessor = processor('skip', {
 	'message:appUser': async function(body, setMetadata) {
 		if (body.message.metadata && body.message.metadata.ignore) {
@@ -106,6 +116,7 @@ express()
 	.use(morgan('tiny'))
 	.use(express.static('public'))
 	.use(bodyParser.json())
+	.post('/processors/postback', validateSecret, postbackProcessor)
 	.post('/processors/skip', validateSecret, skipProcessor)
 	.post('/processors/echo', validateSecret, echoBotProcessor)
 	.post('/processors/sentiment', validateSecret, sentimentProcessor)
