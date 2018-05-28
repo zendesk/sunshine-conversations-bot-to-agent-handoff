@@ -1,8 +1,18 @@
 {
-	"orderedEndpoints": [
-		"https://3102b98b.ngrok.io/processors/skip",
-		"https://3102b98b.ngrok.io/processors/echo",
-		"https://3102b98b.ngrok.io/processors/sentiment",
-		"https://3102b98b.ngrok.io/processors/dialog"
-	]
+	"orderedEndpoints": [{
+		"target": "https://3102b98b.ngrok.io/processors/postback",
+		"triggers": ["postback"]
+	}, {
+		"target": "https://3102b98b.ngrok.io/processors/skip",
+		"triggers": ["message:appUser"]
+	}, {
+		"target": "https://3102b98b.ngrok.io/processors/echo",
+		"triggers": ["message:appUser"]
+	}, {
+		"target": "https://3102b98b.ngrok.io/processors/sentiment",
+		"triggers": ["message:appUser"]
+	}, {
+		"target": "https://3102b98b.ngrok.io/processors/dialog",
+		"triggers": ["message:appUser"]
+	}]
 }
