@@ -9,7 +9,7 @@
     "show": "node scripts/show_pipeline"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "body-parser": "1.18.2",
     "dotenv": "4.0.0",
